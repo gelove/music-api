@@ -1,0 +1,56 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: music-api-route
+  namespace: default
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`music-api.alin.app`)
+    kind: Rule
+    services:
+    - name: music-api-svc
+      port: 8000
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: music-api-svc
+  namespace: default
+spec:
+  selector:
+    app: music-api
+  ports:
+  - name: music-api
+    protocol: TCP
+    # Service暴露的端口
+    port: 8000
+    # 对应容器暴露的端口
+    targetPort: 3000
+    # 外部访问需要暴露的端口
+    # nodePort: 34000
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: music-api-deploy
+  namespace: default
+  labels:
+    app: music-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: music-api
+  template:
+    metadata:
+      labels:
+        app: music-api
+    spec:
+      containers:
+      - name: music-api
+        image: __REGISTRY_IMAGE__
+        imagePullPolicy: Always
